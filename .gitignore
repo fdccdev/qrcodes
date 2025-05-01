@@ -1,0 +1,13 @@
+env/
+venv/
+qr_env/
+instance/
+*.db
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+.env
+*.log
+*.cache

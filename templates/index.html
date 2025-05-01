@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Generador de Códigos QR</h1>
+<form method="POST" action="/">
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" name="text" placeholder="Ingresa el texto o URL" required>
+        <button type="submit" class="btn btn-outline-secondary">Generar QR</button>
+    </div>
+</form>
+{% if qr_data %}
+<img src="{{ qr_data }}" alt="Código QR | click para descargar">
+{% endif %}
+<script>
+    let img = document.querySelector('img')
+    img.addEventListener('click', () => {
+        const link = document.createElement('a')
+        link.href = img.src
+        let name = new Date().getTime()
+        console.log(name)
+        link.download = 'qr_' + name + '.png'
+        link.click()
+    })
+</script>
+{% endblock %}
