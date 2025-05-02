@@ -1,4 +1,3 @@
-from ipaddress import ip_address
 from flask import Flask, render_template, request, redirect, make_response, url_for
 from flask_sqlalchemy import SQLAlchemy
 from user_agents import parse
@@ -8,6 +7,7 @@ import qrcode
 from datetime import datetime
 import uuid
 import os
+import pytz
 
 app = Flask(__name__)
 
@@ -33,7 +33,7 @@ class Scan(db.Model):
     os = db.Column(db.String(50))
     browser = db.Column(db.String(50))
     ip_address = db.Column(db.String(45))  # Soporta IPv4 e IPv6
-    scanned_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    scanned_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(pytz.timezone('America/Bogota')))
 
 # Crear base de datos y tabla
 with app.app_context():
@@ -51,6 +51,11 @@ def force_https():
         url = request.url.replace('http://', 'https://', 1)
         return redirect(url, code=301)
 
+@app.after_request
+def add_client_hints(response):
+    response.headers['Accept-CH'] = 'Sec-CH-UA, Sec-CH-UA-Platform, Sec-CH-UA-Model, Sec-CH-UA-Mobile'
+    return response
+
 @app.route('/', methods=['GET', 'POST'])
 def main():
     qr_data = None
@@ -62,7 +67,7 @@ def main():
             qr_id = str(uuid.uuid4())
             
             # Generar nueva url de seguimiento
-            full_url = request.host_url.rstrip('/') + url_for('qr', qr_id=qr_id)
+            full_url = url_for('qr', qr_id=qr_id, _external=True)
 
             # Generar el código QR
             qr = qrcode.QRCode(version=None, box_size=5, border=3)
@@ -93,7 +98,6 @@ def main():
 def qr_stats(qr_id):
     data = QRCode.query.get_or_404(qr_id)
     scan_count = Scan.query.filter_by(qr_id=qr_id).count()
-    print(scan_count)
     qr_data = data
     return render_template('qr_stats.html', data=qr_data, scan_count=scan_count)
 
@@ -104,11 +108,12 @@ def qr_codes_list():
     return render_template('qr_list.html', data=qr_list)
 
 # Url para trackeo de código QR
-@app.route('/qr/<qr_id>')
+@app.route('/qr/<qr_id>', methods=['GET'])
 def qr(qr_id):
+    # Obtenemos información sobre el SO y la plataforma
     ua_string = request.headers.get('User-Agent')
     user_agent = parse(ua_string)
-    print(user_agent)
+
     ip_address = get_real_ip()
     visited = request.cookies.get(f'unique_visited_{qr_id}')
     data = QRCode.query.get_or_404(qr_id)
@@ -120,7 +125,7 @@ def qr(qr_id):
         if qr_data is None:
             return "Código QR no encontrado"
 
-        # Se incrementa el contador cuando la url del qr es visitada
+        #Se incrementa el contador cuando la url del qr es visitada
         device_type = user_agent.device.family
         os = user_agent.os.family
         browser = user_agent.browser.family
@@ -133,6 +138,8 @@ def qr(qr_id):
         )
         db.session.add(scan)
         db.session.commit()
+        print('url:')
+        print(qr_data.track_url)
         response = make_response(redirect(qr_data.track_url))
         response.set_cookie(f'unique_visited_{qr_id}', 'true', max_age=60*60*24*365)
         return response
@@ -147,8 +154,12 @@ def  delete_qr(qr_id):
 
     return redirect(url_for('qr_codes_list'))
     
-
-
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = os.environ.get('PORT', '5000')
+    try:
+        port = int(port)
+    except ValueError:
+        print(f"Error: Puerto inválido '{port}'. Usando 5000.")
+        port = 5000
+    print(f"Puerto configurado: {port}")
+    app.run(host='0.0.0.0', port=port, debug=True)
