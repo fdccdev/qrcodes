@@ -20,6 +20,7 @@ db = SQLAlchemy(app)
 class QRCode(db.Model):
     id = db.Column(db.String(100), primary_key=True)
     url = db.Column(db.Text, nullable=False)
+    tag = db.Column(db.Text, nullable=False)
     track_url = db.Column(db.Text, nullable=False)
     qr_image = db.Column(db.Text, nullable=False)
     create_at = db.Column(db.Text, nullable=False)
@@ -65,7 +66,8 @@ def main():
             # Generar id del qr
             qr_id = 0
             qr_id = str(uuid.uuid4())
-            
+            tag = text.split('/')
+            name_url = f"{tag[4]}:{tag[5]}"
             # Generar nueva url de seguimiento
             full_url = url_for('qr', qr_id=qr_id, _external=True)
 
@@ -85,7 +87,7 @@ def main():
             date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
             # Guardar qr en base de datos
-            qr_code = QRCode(id=qr_id, url=text, track_url=full_url, qr_image=qr_data, create_at=date)
+            qr_code = QRCode(id=qr_id, url=text, tag=name_url, track_url=full_url, qr_image=qr_data, create_at=date)
             db.session.add(qr_code)
             db.session.commit()
 
