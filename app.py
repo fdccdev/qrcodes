@@ -4,10 +4,8 @@ from user_agents import parse
 import base64
 from io import BytesIO
 import qrcode
-from datetime import datetime
 import uuid
 import os
-import pytz
 
 app = Flask(__name__)
 
@@ -16,25 +14,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:/
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Modelo tabla qrcodes
-class QRCode(db.Model):
-    id = db.Column(db.String(100), primary_key=True)
-    url = db.Column(db.Text, nullable=False)
-    tag = db.Column(db.Text, nullable=False)
-    track_url = db.Column(db.Text, nullable=False)
-    qr_image = db.Column(db.Text, nullable=False)
-    create_at = db.Column(db.Text, nullable=False)
-    scans = db.relationship('Scan', backref='qrcode', lazy=True, cascade='all, delete') # Relación con eliminación en cascada
-
-# Modelo para la tabla scans
-class Scan(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    qr_id = db.Column(db.String(36), db.ForeignKey('qr_code.id'), nullable=False)
-    device_type = db.Column(db.String(50))
-    os = db.Column(db.String(50))
-    browser = db.Column(db.String(50))
-    ip_address = db.Column(db.String(45))  # Soporta IPv4 e IPv6
-    scanned_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(pytz.timezone('America/Bogota')))
+# Importar modelos después de inicializar db
+from models.qr_model import QRCode, Scan
 
 # Crear base de datos y tabla
 with app.app_context():
@@ -82,12 +63,9 @@ def main():
             img.save(buffer, format="PNG")
             img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
             qr_data = f"data:image/png;base64,{img_str}"
-            
-            # Fecha de creación
-            date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
             # Guardar qr en base de datos
-            qr_code = QRCode(id=qr_id, url=text, tag=name_url, track_url=full_url, qr_image=qr_data, create_at=date)
+            qr_code = QRCode(id=qr_id, url=text, tag=name_url, track_url=full_url, qr_image=qr_data)
             db.session.add(qr_code)
             db.session.commit()
 
@@ -100,8 +78,9 @@ def main():
 def qr_stats(qr_id):
     data = QRCode.query.get_or_404(qr_id)
     scan_count = Scan.query.filter_by(qr_id=qr_id).count()
+    scan_all = Scan.query.filter_by(qr_id=qr_id).limit(100).all()
     qr_data = data
-    return render_template('qr_stats.html', data=qr_data, scan_count=scan_count)
+    return render_template('qr_stats.html', data=qr_data, scan_count=scan_count, scan_all=scan_all)
 
 @app.route('/qrcodes')
 def qr_codes_list():
@@ -140,8 +119,6 @@ def qr(qr_id):
         )
         db.session.add(scan)
         db.session.commit()
-        print('url:')
-        print(qr_data.track_url)
         response = make_response(redirect(qr_data.track_url))
         response.set_cookie(f'unique_visited_{qr_id}', 'true', max_age=60*60*24*365)
         return response

@@ -2,27 +2,65 @@
 
 {% block content %}
 
-<ul class="list-group">
-    <li class="list-group-item active" aria-current="true">
-        <a target="_blank" href="{{ data.url }}">{{ data.url }}</a>
-    </li>
-    <li class="list-group-item">Código QR generado</li>
-    <li class="list-group-item">
-        <img src="{{data.qr_image}}" alt="{{ data.url }}">
-    </li>
-    <li class="list-group-item">Número de escaneos : {{scan_count}}</li>
-    <li class="list-group-item">Fecha de creación: {{data.create_at}}</li>
-</ul>
+<div class="row">
+  <div class="col-5">
+    <div class="ul_list">
+      <ul class="list-group">
+        <li class="list-group-item active" aria-current="true">
+          <a target="_blank" class="text-center" href="{{ data.url }}">
+            <span class="url_text">{{ data.url }}</span>
+          </a>
+        </li>
+        <li class="list-group-item">Código QR generado</li>
+        <li class="list-group-item">
+          <img class="img-thumbnail" src="{{data.qr_image}}" alt="{{ data.url }}">
+        </li>
+        <li class="list-group-item">Número de escaneos : {{scan_count}}</li>
+        <li class="list-group-item">Fecha de creación: {{data.created_at.strftime('%Y-%m-%d %H:%M')}}</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col-7">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Dispositivo</th>
+          <th scope="col">Plataforma</th>
+          <th scope="col">Navegador</th>
+          <th scope="col">Fecha lectura</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in scan_all %}
+        <tr>
+          <th scope="row">{{loop.index}}</th>
+          {% if item.device_type == 'K' %}
+          <td>Android smartphone</td>
+          {% else %}
+          <td>{{item.device_type}}</td>
+          {% endif %}
+          <td>{{item.os}}</td>
+          <td>{{item.browser}}</td>
+          <td>{{item.scanned_at.strftime('%Y-%m-%d %H:%M')}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <br>
+  
+</div>
 
 <script>
-    let img = document.querySelector('img')
-    img.addEventListener('click', () => {
-        const link = document.createElement('a')
-        link.href = img.src
-        let name = new Date().getTime()
-        console.log(name)
-        link.download = 'qr_' + name + '.png'
-        link.click()
-    })
+  let img = document.querySelector('img')
+  img.addEventListener('click', () => {
+    const link = document.createElement('a')
+    link.href = img.src
+    let name = new Date().getTime()
+    console.log(name)
+    link.download = 'qr_' + name + '.png'
+    link.click()
+  })
 </script>
 {% endblock %}
