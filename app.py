@@ -8,6 +8,7 @@ import uuid
 import os
 
 app = Flask(__name__)
+app.config['TIMEZONE'] = 'America/Bogota'
 
 # configuración SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///qrcodes.db')
@@ -44,11 +45,22 @@ def main():
     if request.method == 'POST':
         text = request.form.get('text')
         if text:
+
             # Generar id del qr
             qr_id = 0
             qr_id = str(uuid.uuid4())
             tag = text.split('/')
-            name_url = f"{tag[4]}:{tag[5]}"
+            name_tag = ''
+            name_url = ''
+            string_sl = tag[5]
+            sign = '?'
+            position_sg = string_sl.find(sign)
+            print(position_sg)
+            if position_sg != -1 :
+                name_tag = string_sl[:position_sg]
+                name_url = f"{tag[4]}:{name_tag}"
+            else:
+                name_url = f"{tag[4]}:{tag[5]}"
             # Generar nueva url de seguimiento
             full_url = url_for('qr', qr_id=qr_id, _external=True)
 
