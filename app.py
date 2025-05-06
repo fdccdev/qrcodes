@@ -49,9 +49,8 @@ google = oauth.register(
 # Rutas autenticación
 @app.route('/login')
 def login():
-    redirect_uri = url_for('auth/callback', _external=True)
-    print(f"Redirect URI usado: {redirect_uri}")  # Para depuración
-    return google.authorize_redirect(redirect_uri, prompt='consent')
+    redirect_uri = url_for('auth_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
 
 @app.route('/auth/callback')
 def auth_callback():
@@ -92,10 +91,12 @@ from routes import init_routes
 init_routes(app)
 
 if __name__ == '__main__':
-     port = os.environ.get('PORT', '5000')
-     try:
-         port = int(port)
-     except ValueError:
-         print(f"Error: Puerto inválido '{port}'. Usando 5000.")
-         port = 5000
-     print(f"Puerto configurado: {port}")
+    port = os.environ.get('PORT', '5000')
+    init_db()
+    try:
+        port = int(port)
+    except ValueError:
+        print(f"Error: Puerto inválido '{port}'. Usando 5000.")
+        port = 5000
+    print(f"Puerto configurado: {port}")
+    app.run(host='0.0.0.0', port=port, debug=True, ssl_context="adhoc")
