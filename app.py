@@ -92,12 +92,10 @@ from routes import init_routes
 init_routes(app)
 
 if __name__ == '__main__':
-    port = os.getenv('PORT', '5000')
-    init_db()
-    try:
-        port = int(port)
-    except ValueError:
-        print(f"Error: Puerto inválido '{port}'. Usando 5000.")
-        port = 5000
-    print(f"Puerto configurado: {port}")
-    app.run(host='0.0.0.0', port=port, debug=True, ssl_context="adhoc")
+     port = os.environ.get('PORT', '5000')
+     try:
+         port = int(port)
+     except ValueError:
+         print(f"Error: Puerto inválido '{port}'. Usando 5000.")
+         port = 5000
+     print(f"Puerto configurado: {port}")
