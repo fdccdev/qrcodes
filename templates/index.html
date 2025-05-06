@@ -3,6 +3,7 @@
 {% block content %}
 <h1>Generador de Códigos QR</h1>
 <form method="POST" action="/">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="input-group mb-3">
         <input type="text" class="form-control" name="text" placeholder="Ingresa el texto o URL" required>
         <button type="submit" class="btn btn-outline-secondary">Generar QR</button>

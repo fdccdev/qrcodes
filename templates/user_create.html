@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Registro de usuarios</h1>
+<hr>
+<span><b>{{ session.user_email }}</b></span>
+{% if user_role == 'admin' %}
+<div class="container mt-5">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <form method="POST" action="/create">
+        {{ form.hidden_tag() }} <!-- Protección CSRF -->
+        <div class="input-group mb-3">
+            <!-- <span class="input-group-text">Registro de usuarios</span> -->
+            {{ form.name(class="form-control", placeholder="Nombre y apellido") }}
+            {{ form.email(class="form-control", placeholder="Email de google") }}
+            {{ form.corporate_email(class="form-control", placeholder="Email de Falabella") }}
+            {{ form.submit(class="btn btn-primary") }}
+        </div>
+    </form>
+
+    <!-- <h2>Usuarios registrados</h2> -->
+    <table class="table">
+        <thead>
+            <tr>
+              <th scope="col">Nombre</th>
+              <th scope="col">Email google</th>
+              <th scope="col">Email corporativo</th>
+              <th scope="col">Privilegios</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.corporate_email }}</td>
+                <td><b>{{ user.role }}</b></td>
+                <td>
+                    <form action="{{ url_for('delete_user', id=user.id) }}" method="post" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este Usuario?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-danger">
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+    </table>
+</div>
+{% else %}
+    <p>No tienes permisos para ver la lista de usuarios. Solo los administradores pueden acceder a esta sección.</p>
+{% endif %}
+
+{% endblock %}

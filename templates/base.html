@@ -67,6 +67,23 @@
                         <a class="nav-link active" href="/qrcodes">Listado</a>
                     </li>
                 </ul>
+                <!-- Elementos alineados a la derecha -->
+                <ul class="navbar-nav ms-auto">
+                    {% if g.user_role == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-outline-dark" href="{{ url_for('create_user') }}">Panel Admin</a>
+                            </li>
+                        {% endif %}
+                    {% if session.user_email %}
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-dark" href="{{ url_for('logout') }}">Cerrar sesión</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-dark" href="{{ url_for('login') }}">Iniciar sesión</a>
+                        </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </nav>

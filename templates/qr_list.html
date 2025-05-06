@@ -23,6 +23,7 @@
           <td>{{qr_data.created_at.strftime('%Y-%m-%d %H:%M')}}</td>
           <td class="link">
             <form action="{{ url_for('delete_qr', qr_id=qr_data.id) }}" method="post" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este QR?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-sm btn-danger">
                   <i class="fas fa-trash-alt"></i>
                 </button>

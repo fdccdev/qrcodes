@@ -1,6 +1,9 @@
-from app import db
+from flask_login import UserMixin
+from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import pytz
+
+db = SQLAlchemy()
 
 # Modelo tabla qrcodes
 class QRCode(db.Model):
@@ -21,3 +24,11 @@ class Scan(db.Model):
     browser = db.Column(db.String(50))
     ip_address = db.Column(db.String(45))  # Soporta IPv4 e IPv6
     scanned_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(pytz.timezone('America/Bogota')))
+
+# Modelo para la tabla usuarios
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(50), nullable=False)
+    corporate_email = db.Column(db.String(50), nullable=False)
+    role = db.Column(db.String(5), nullable=False, default='user')
